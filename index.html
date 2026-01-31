@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>maamutoyroom | うちの子AIクリエイター</title>
+    <meta name="description" content="写真1枚でうちの子の小さな世界作ります。選んだ人のセンスまで褒められる仕上がりを大切にする、AIクリエイターmaamutoyroomのポートフォリオ。">
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'korean-cream': '#F9F8F4',
+                        'korean-grid': '#E6E2D6',
+                        'accent-orange': '#C85A17', // 濃いめのオレンジ（テラコッタ）
+                        'accent-blue': '#6B8C9E',   // くすみブルー
+                        'text-main': '#333333',
+                        'text-sub': '#777777',
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans JP"', 'sans-serif'],
+                        serif: ['"Cormorant Garmond"', 'serif'],
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #E6E2D6 1px, transparent 1px), linear-gradient(to bottom, #E6E2D6 1px, transparent 1px)",
+                    },
+                    backgroundSize: {
+                        'grid-size': '60px 60px',
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* カスタムスタイル */
+        body {
+            background-color: #F9F8F4;
+            color: #333333;
+            font-feature-settings: "palt";
+        }
+        
+        /* スムーズスクロール */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* グリッド背景の適用クラス */
+        .bg-grid-lines {
+            background-image: linear-gradient(to right, #E6E2D6 1px, transparent 1px), linear-gradient(to bottom, #E6E2D6 1px, transparent 1px);
+            background-size: 80px 80px; /* デスクトップ用 */
+        }
+        @media (max-width: 768px) {
+            .bg-grid-lines {
+                background-size: 40px 40px; /* モバイルは少し細かく */
+            }
+        }
+
+        /* 画像のホバーエフェクト */
+        .hover-img-zoom {
+            overflow: hidden;
+        }
+        .hover-img-zoom img {
+            transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .hover-img-zoom:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Masonry Grid (CSS Column) */
+        .masonry-grid {
+            column-count: 1;
+            column-gap: 24px;
+        }
+        @media (min-width: 640px) {
+            .masonry-grid { column-count: 2; }
+        }
+        @media (min-width: 1024px) {
+            .masonry-grid { column-count: 3; }
+        }
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-accent-orange selection:text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // React Components
+        const { useState, useEffect, useRef } = React;
+
+        // フェードインアニメーション用コンポーネント
+        const FadeIn = ({ children, delay = 0, className = "" }) => {
+            const [isVisible, setIsVisible] = useState(false);
+            const ref = useRef(null);
+
+            useEffect(() => {
+                const observer = new IntersectionObserver(
+                    ([entry]) => {
+                        if (entry.isIntersecting) {
+                            setIsVisible(true);
+                            observer.unobserve(ref.current);
+                        }
+                    },
+                    { threshold: 0.1 }
+                );
+                if (ref.current) observer.observe(ref.current);
+                return () => observer.disconnect();
+            }, []);
+
+            return (
+                <div
+                    ref={ref}
+                    className={`${className} transition-all duration-1000 ease-out ${
+                        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                    }`}
+                    style={{ transitionDelay: `${delay}ms` }}
+                >
+                    {children}
+                </div>
+            );
+        };
+
+        // ナビゲーション
+        const Header = () => (
+            <header className="fixed top-0 left-0 w-full z-50 bg-korean-cream/80 backdrop-blur-sm border-b border-korean-grid">
+                <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
+                    <h1 className="font-serif text-xl font-bold tracking-wide text-accent-orange">maamutoyroom</h1>
+                    <nav className="hidden md:flex gap-8 text-sm font-medium tracking-widest text-text-sub">
+                        <a href="#about" className="hover:text-accent-orange transition-colors">ABOUT</a>
+                        <a href="#service" className="hover:text-accent-orange transition-colors">SERVICE</a>
+                        <a href="#gallery" className="hover:text-accent-orange transition-colors">GALLERY</a>
+                        <a href="#contact" className="hover:text-accent-orange transition-colors">CONTACT</a>
+                    </nav>
+                </div>
+            </header>
+        );
+
+        // ヒーローセクション
+        const Hero = () => (
+            <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 overflow-hidden bg-grid-lines min-h-screen flex items-center">
+                {/* 装飾円形 */}
+                <div className="absolute top-20 right-[-10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-accent-blue/10 rounded-full blur-3xl animate-float"></div>
+                <div className="absolute bottom-20 left-[-10%] w-[200px] h-[200px] md:w-[400px] md:h-[400px] bg-accent-orange/10 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+
+                <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
+                    <div className="order-2 md:order-1">
+                        <FadeIn delay={200}>
+                            <p className="text-accent-orange font-bold tracking-widest text-sm mb-4 uppercase">AI Creator Portfolio</p>
+                            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 font-sans feature-settings">
+                                写真1枚で<br/>
+                                <span className="font-serif italic text-accent-blue mr-2">うちの子</span>の<br/>
+                                小さな世界作ります
+                            </h2>
+                            <p className="text-text-sub leading-relaxed mb-8 max-w-md">
+                                うちの子の可愛さだけじゃなく、<br className="hidden md:block"/>
+                                ”選んだ人のセンスまでそっと褒められる仕上がり”を大切に。<br/>
+                                あなただけの特別な物語を紡ぎます。
+                            </p>
+                            <div className="flex gap-4">
+                                <a href="#gallery" className="bg-accent-orange text-white px-8 py-3 rounded-full text-sm font-bold tracking-wider hover:bg-opacity-90 transition-all shadow-lg shadow-accent-orange/30">
+                                    VIEW WORKS
+                                </a>
+                                <a href="#contact" className="border border-accent-orange text-accent-orange px-8 py-3 rounded-full text-sm font-bold tracking-wider hover:bg-accent-orange hover:text-white transition-all">
+                                    CONTACT
+                                </a>
+                            </div>
+                        </FadeIn>
+                    </div>
+                    <div className="order-1 md:order-2 relative">
+                        <FadeIn delay={400} className="relative">
+                             {/* メインビジュアル：四角と丸の組み合わせで韓国風に */}
+                            <div className="relative z-10 rounded-t-[100px] rounded-b-[20px] overflow-hidden shadow-2xl border-4 border-white aspect-[3/4] max-w-sm mx-auto md:mr-0">
+                                {/* REPLACE: ここにメインの「うちの子」作品画像を入れてください */}
+                                <img 
+                                    src="https://images.unsplash.com/photo-1591490211516-7871b3e83b4b?q=80&w=1000&auto=format&fit=crop" 
+                                    alt="ファンタジーな世界観の猫" 
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            {/* 装飾の枠線 */}
+                            <div className="absolute top-6 right-6 md:-right-6 w-full h-full border-2 border-accent-blue/30 rounded-t-[100px] rounded-b-[20px] -z-10 translate-x-4 translate-y-4"></div>
+                        </FadeIn>
+                    </div>
+                </div>
+            </section>
+        );
+
+        // コンセプトセクション
+        const About = () => (
+            <section id="about" className="py-24 bg-white relative">
+                <div className="max-w-4xl mx-auto px-6 text-center">
+                    <FadeIn>
+                        <span className="font-serif text-accent-blue italic text-lg mb-2 block">Concept</span>
+                        <h2 className="text-3xl font-bold mb-12 tracking-wider">活動への想い</h2>
+                        <div className="prose prose-lg mx-auto text-text-sub leading-loose">
+                            <p className="mb-6">
+                                うちの子の可愛さだけじゃなく、<br/>
+                                <strong className="text-accent-orange font-medium bg-orange-50 px-1">”選んだ人のセンスまでそっと褒められる仕上がり”</strong><br/>
+                                を大切にしています。
+                            </p>
+                            <p>
+                                「それどうやって作ったの？」ってつい聞かれるような、<br/>
+                                魔法がかかったような「うちの子の世界」をお届けします🐾
+                            </p>
+                        </div>
+                    </FadeIn>
+                </div>
+            </section>
+        );
+
+        // サービスセクション
+        const ServiceCard = ({ number, title, subtitle, desc, icon }) => (
+            <div className="bg-korean-cream border border-korean-grid p-8 hover:shadow-xl transition-shadow duration-300 relative group overflow-hidden rounded-xl">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span className="text-6xl text-accent-orange font-serif italic">{number}</span>
+                </div>
+                <h3 className="font-serif text-2xl mb-2 text-text-main group-hover:text-accent-orange transition-colors">{title}</h3>
+                <p className="text-xs font-bold text-accent-blue uppercase tracking-widest mb-4">{subtitle}</p>
+                <p className="text-sm text-text-sub leading-relaxed">{desc}</p>
+            </div>
+        );
+
+        const Services = () => (
+            <section id="service" className="py-24 bg-grid-lines">
+                <div className="max-w-7xl mx-auto px-6">
+                    <FadeIn>
+                        <div className="flex flex-col md:flex-row justify-between items-end mb-16 border-b border-korean-grid pb-6">
+                            <div>
+                                <span className="font-serif text-accent-blue italic block mb-1">Services</span>
+                                <h2 className="text-3xl font-bold tracking-wider">できること</h2>
+                            </div>
+                            <p className="text-sm text-text-sub mt-4 md:mt-0">あなたの大切な存在を、形に残すお手伝い。</p>
+                        </div>
+                    </FadeIn>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <FadeIn delay={100}>
+                            <ServiceCard 
+                                number="01"
+                                title="待受け画像"
+                                subtitle="Mobile Wallpaper"
+                                desc="毎日見るスマホの画面を、うちの子だけの特別なアートに。季節や気分に合わせて着せ替えを楽しめます。"
+                            />
+                        </FadeIn>
+                        <FadeIn delay={200}>
+                            <ServiceCard 
+                                number="02"
+                                title="バースデーカード"
+                                subtitle="Birthday Card"
+                                desc="年に一度の特別な日を彩る、世界に一つだけのデザイン。SNSでの報告やプリントして飾るのにも最適です。"
+                            />
+                        </FadeIn>
+                        <FadeIn delay={300}>
+                            <ServiceCard 
+                                number="03"
+                                title="記念日テンプレ"
+                                subtitle="Anniversary Template"
+                                desc="うちの子記念日や季節のイベントに。写真を入れるだけで完成する、おしゃれなテンプレートを作成します。"
+                            />
+                        </FadeIn>
+                    </div>
+                </div>
+            </section>
+        );
+
+        // ギャラリーセクション（Masonryレイアウト）
+        const GalleryItem = ({ src, title, category }) => (
+            <div className="masonry-item mb-8 break-inside-avoid">
+                <div className="hover-img-zoom rounded-lg overflow-hidden bg-white shadow-sm border border-korean-grid group cursor-pointer relative">
+                    {/* REPLACE: 作品画像を設定 */}
+                    <img 
+                        src={src} 
+                        alt={title} 
+                        className="w-full h-auto block"
+                        loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <p className="text-accent-orange text-xs tracking-widest font-bold uppercase mb-1">{category}</p>
+                        <h4 className="text-white font-serif text-lg">{title}</h4>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Gallery = () => {
+            // ダミー画像のリスト（後で差し替えやすいように構成）
+            const works = [
+                { id: 1, src: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop", title: "Forest Tea Party", category: "AI Art" },
+                { id: 2, src: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?q=80&w=800&auto=format&fit=crop", title: "Space Journey", category: "Wallpaper" },
+                { id: 3, src: "https://images.unsplash.com/photo-1574158622682-e40e69881006?q=80&w=800&auto=format&fit=crop", title: "Autumn Warmth", category: "Card Design" },
+                { id: 4, src: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=800&auto=format&fit=crop", title: "Classic Portrait", category: "AI Art" },
+                { id: 5, src: "https://images.unsplash.com/photo-1495360019602-e05980bf9469?q=80&w=800&auto=format&fit=crop", title: "Miniature World", category: "Concept Art" },
+                { id: 6, src: "https://images.unsplash.com/photo-1511044568932-338cba0fb803?q=80&w=800&auto=format&fit=crop", title: "Birthday Celebration", category: "Birthday" },
+                { id: 7, src: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=800&auto=format&fit=crop", title: "Cozy Morning", category: "Wallpaper" },
+                { id: 8, src: "https://images.unsplash.com/photo-1501820488136-72669149e0d4?q=80&w=800&auto=format&fit=crop", title: "Dreamy Clouds", category: "AI Art" },
+                { id: 9, src: "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?q=80&w=800&auto=format&fit=crop", title: "Little Explorer", category: "Story" },
+            ];
+
+            return (
+                <section id="gallery" className="py-24 bg-white">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <FadeIn>
+                            <div className="text-center mb-16">
+                                <span className="font-serif text-accent-blue italic block mb-1">Gallery</span>
+                                <h2 className="text-3xl font-bold tracking-wider mb-4">作品ギャラリー</h2>
+                                <p className="text-sm text-text-sub">クリックで詳細をご覧いただけます（イメージ）</p>
+                            </div>
+                        </FadeIn>
+
+                        <div className="masonry-grid">
+                            {works.map((work, index) => (
+                                <FadeIn key={work.id} delay={index * 100}>
+                                    <GalleryItem {...work} />
+                                </FadeIn>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // コンタクトセクション
+        const Contact = () => (
+            <section id="contact" className="py-32 bg-korean-cream relative overflow-hidden">
+                <div className="absolute inset-0 bg-grid-lines opacity-50"></div>
+                <div className="max-w-3xl mx-auto px-6 relative z-10 text-center">
+                    <FadeIn>
+                        <h2 className="text-4xl font-serif font-bold text-accent-orange mb-6">Contact</h2>
+                        <p className="text-text-sub mb-10 leading-loose">
+                            制作のご依頼、ご相談、その他お問い合わせは<br/>
+                            Lit.linkにまとめている各リンクよりお待ちしております。<br/>
+                            お気軽にメッセージをお送りください。
+                        </p>
+                        
+                        <div className="bg-white p-12 rounded-2xl shadow-xl border border-korean-grid max-w-lg mx-auto transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                             <h3 className="text-xl font-bold mb-6 text-text-main">Link Collection</h3>
+                             <p className="text-sm text-text-sub mb-8">SNS / Shop / Mail</p>
+                             <a 
+                                href="https://lit.link/maamutoyroom" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="block w-full bg-accent-orange text-white py-4 rounded-full font-bold tracking-widest shadow-lg shadow-accent-orange/30 hover:bg-accent-blue hover:shadow-accent-blue/30 transition-all"
+                            >
+                                Lit.linkを見る
+                            </a>
+                        </div>
+                    </FadeIn>
+                </div>
+            </section>
+        );
+
+        // フッター
+        const Footer = () => (
+            <footer className="bg-white border-t border-korean-grid py-12">
+                <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div>
+                        <p className="font-serif text-2xl font-bold text-accent-orange mb-2">maamutoyroom</p>
+                        <p className="text-xs text-text-sub tracking-wider">うちの子AIクリエイター</p>
+                    </div>
+                    <div className="flex gap-6">
+                        {/* SNSリンクが必要ならここに追加 */}
+                        <a href="#" className="text-text-sub hover:text-accent-orange transition-colors text-sm">Instagram</a>
+                        <a href="#" className="text-text-sub hover:text-accent-orange transition-colors text-sm">X (Twitter)</a>
+                    </div>
+                    <p className="text-xs text-text-sub opacity-50">
+                        &copy; {new Date().getFullYear()} maamutoyroom. All Rights Reserved.
+                    </p>
+                </div>
+            </footer>
+        );
+
+        const App = () => {
+            return (
+                <div className="font-sans text-text-main">
+                    <Header />
+                    <main>
+                        <Hero />
+                        <About />
+                        <Services />
+                        <Gallery />
+                        <Contact />
+                    </main>
+                    <Footer />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
