@@ -17,7 +17,8 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Dela Gothic One (ラグラン風フォント) を追加 -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Dela+Gothic+One&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <!-- Tailwind Config -->
     <script>
@@ -27,14 +28,17 @@
                     colors: {
                         'korean-cream': '#F9F8F4',
                         'korean-grid': '#E6E2D6',
-                        'accent-orange': '#C85A17', // 濃いめのオレンジ（テラコッタ）
+                        'accent-orange': '#e55604', // 指定色
                         'accent-blue': '#6B8C9E',   // くすみブルー
-                        'text-main': '#333333',
+                        'vivid-blue': '#3b5de0',    // 指定色
+                        'deep-green': '#255f38',    // 指定色
+                        'text-main': '#424141',     // 指定色
                         'text-sub': '#777777',
                     },
                     fontFamily: {
                         sans: ['"Noto Sans JP"', 'sans-serif'],
                         serif: ['"Cormorant Garamond"', 'serif'],
+                        raglan: ['"Dela Gothic One"', 'cursive'], // ラグラン風フォント定義
                     },
                     backgroundImage: {
                         'grid-pattern': "linear-gradient(to right, #E6E2D6 1px, transparent 1px), linear-gradient(to bottom, #E6E2D6 1px, transparent 1px)",
@@ -65,7 +69,7 @@
         /* カスタムスタイル */
         body {
             background-color: #F9F8F4;
-            color: #333333;
+            color: #424141; /* 指定色 */
             font-feature-settings: "palt";
         }
         
@@ -156,7 +160,16 @@
         const Header = () => (
             <header className="fixed top-0 left-0 w-full z-50 bg-korean-cream/80 backdrop-blur-sm border-b border-korean-grid">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
-                    <h1 className="font-serif text-xl font-bold tracking-wide text-accent-orange">maamutoyroom</h1>
+                    {/* 画像ロゴに変更 */}
+                    <h1>
+                        <a href="#">
+                            <img 
+                                src="https://raw.githubusercontent.com/maamu0308/template/main/assets/tag.webp" 
+                                alt="maamutoyroom" 
+                                className="h-12 w-auto object-contain"
+                            />
+                        </a>
+                    </h1>
                     <nav className="hidden md:flex gap-8 text-sm font-medium tracking-widest text-text-sub">
                         <a href="#about" className="hover:text-accent-orange transition-colors">ABOUT</a>
                         <a href="#service" className="hover:text-accent-orange transition-colors">SERVICE</a>
@@ -180,7 +193,8 @@
                             <p className="text-accent-orange font-bold tracking-widest text-sm mb-4 uppercase">AI Creator Portfolio</p>
                             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 font-sans feature-settings">
                                 写真1枚で<br/>
-                                <span className="text-accent-blue mr-2">うちの子</span>の<br/>
+                                {/* テキスト色: deep-green */}
+                                <span className="text-deep-green mr-2">うちの子</span>の<br/>
                                 小さな世界作ります
                             </h2>
                             <p className="text-text-sub leading-relaxed mb-8 max-w-md">
@@ -200,9 +214,9 @@
                     </div>
                     <div className="order-1 md:order-2 relative">
                         <FadeIn delay={400} className="relative">
-                             {/* メインビジュアル：楕円フレームを削除し、シンプルな角丸長方形に変更 */}
+                             {/* メインビジュアル：シンプルな角丸長方形 */}
                             <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl border-4 border-white aspect-[3/4] max-w-sm mx-auto md:mr-0">
-                                {/* 画像リンクを変更しました */}
+                                {/* 指定画像 */}
                                 <img 
                                     src="https://raw.githubusercontent.com/maamu0308/template/main/assets/wallpaper.webp" 
                                     alt="ファンタジーな世界観の猫" 
@@ -296,7 +310,7 @@
         // ギャラリーセクション（Masonryレイアウト）
         const GalleryItem = ({ src, title, category }) => (
             <div className="masonry-item mb-8 break-inside-avoid">
-                <div className="hover-img-zoom rounded-lg overflow-hidden bg-white shadow-sm border border-korean-grid group cursor-pointer relative">
+                <div className="hover-img-zoom rounded-lg overflow-hidden bg-white shadow-sm border border-korean-grid relative">
                     {/* REPLACE: 作品画像を設定 */}
                     <img 
                         src={src} 
@@ -304,16 +318,13 @@
                         className="w-full h-auto block"
                         loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                        <p className="text-accent-orange text-xs tracking-widest font-bold uppercase mb-1">{category}</p>
-                        <h4 className="text-white font-serif text-lg">{title}</h4>
-                    </div>
+                    {/* 文字オーバーレイなし */}
                 </div>
             </div>
         );
 
         const Gallery = () => {
-            // ダミー画像のリスト（後で差し替えやすいように構成）
+            // 指定された画像のリスト
             const works = [
                 { id: 1, src: "https://raw.githubusercontent.com/maamu0308/template/main/assets/bd.greencheck.webp", title: "Forest Tea Party", category: "AI Art" },
                 { id: 2, src: "https://raw.githubusercontent.com/maamu0308/template/main/assets//bd.pink.webp", title: "Space Journey", category: "Wallpaper" },
@@ -364,8 +375,12 @@
                         </p>
                         
                         <div className="bg-white p-12 rounded-2xl shadow-xl border border-korean-grid max-w-lg mx-auto transform rotate-1 hover:rotate-0 transition-transform duration-500">
-                             <h3 className="text-xl font-bold mb-6 text-text-main">Link Collection</h3>
-                             <p className="text-sm text-text-sub mb-8">SNS / Shop / Mail</p>
+                             {/* 画像をアイコンに変更：丸く切り抜き */}
+                             <img 
+                                src="https://raw.githubusercontent.com/maamu0308/template/main/assets/ikon.webp" 
+                                alt="Link Icon" 
+                                className="mx-auto mb-8 w-32 h-32 rounded-full object-cover shadow-md"
+                             />
                              <a 
                                 href="https://lit.link/maamutoyroom" 
                                 target="_blank" 
@@ -385,7 +400,12 @@
             <footer className="bg-white border-t border-korean-grid py-12">
                 <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div>
-                        <p className="font-serif text-2xl font-bold text-accent-orange mb-2">maamutoyroom</p>
+                        {/* 画像ロゴに変更 */}
+                        <img 
+                            src="https://raw.githubusercontent.com/maamu0308/template/main/assets/tag.webp" 
+                            alt="maamutoyroom" 
+                            className="h-10 w-auto object-contain mb-2"
+                        />
                         <p className="text-xs text-text-sub tracking-wider">うちの子AIクリエイター</p>
                     </div>
                     <div className="flex gap-6">
@@ -419,8 +439,5 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
-</body>
-</html>
-    </script>
 </body>
 </html>
